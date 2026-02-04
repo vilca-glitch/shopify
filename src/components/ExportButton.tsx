@@ -58,11 +58,12 @@ export function ExportButton({ reviews, appSlug, disabled }: ExportButtonProps) 
   const badCount = getFilteredCount(reviews, 'bad');
 
   return (
-    <div className="flex gap-2">
+    <div className="flex gap-3">
       <Button
         variant="primary"
         onClick={() => handleExport('all')}
         disabled={disabled || allCount === 0}
+        className="flex-1"
       >
         All ({allCount})
       </Button>
@@ -70,7 +71,7 @@ export function ExportButton({ reviews, appSlug, disabled }: ExportButtonProps) 
         variant="secondary"
         onClick={() => handleExport('good')}
         disabled={disabled || goodCount === 0}
-        className="!bg-green-50 !text-green-700 hover:!bg-green-100 !border-green-200"
+        className="flex-1 !bg-green-50 !text-green-700 hover:!bg-green-100 !border-green-200"
       >
         Good ({goodCount})
       </Button>
@@ -78,7 +79,7 @@ export function ExportButton({ reviews, appSlug, disabled }: ExportButtonProps) 
         variant="secondary"
         onClick={() => handleExport('bad')}
         disabled={disabled || badCount === 0}
-        className="!bg-amber-50 !text-amber-700 hover:!bg-amber-100 !border-amber-200"
+        className="flex-1 !bg-amber-50 !text-amber-700 hover:!bg-amber-100 !border-amber-200"
       >
         Bad ({badCount})
       </Button>

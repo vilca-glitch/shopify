@@ -117,7 +117,7 @@ function App() {
 
             {isCompleted && job && (
               <Card>
-                <CardContent className="flex items-center justify-between">
+                <CardContent className="space-y-4">
                   <div>
                     <h3 className="font-semibold text-gray-900">Export Reviews</h3>
                     <p className="text-sm text-gray-500">Download all scraped reviews as CSV</p>

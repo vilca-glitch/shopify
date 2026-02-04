@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useUpdateAgent } from '../hooks/useUpdateAgent';
 import { useDeleteAgent } from '../hooks/useDeleteAgent';
+import { useRunAgent } from '../hooks/useRunAgent';
 import type { DayOfWeek, RecurringAgent } from '../lib/types';
 
 interface AgentListItemProps {
@@ -31,10 +32,15 @@ export function AgentListItem({ agent }: AgentListItemProps) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const { updateAgent, isUpdating } = useUpdateAgent();
   const { deleteAgent, isDeleting } = useDeleteAgent();
+  const { runAgent, isRunning } = useRunAgent();
 
   const isActive = agent.status === 'active';
   const isPaused = agent.status === 'paused';
   const isStopped = agent.status === 'stopped';
+
+  const handleRunNow = () => {
+    runAgent(agent.id);
+  };
 
   const handleStop = () => {
     updateAgent({ id: agent.id, status: 'stopped' });
@@ -116,10 +122,28 @@ export function AgentListItem({ agent }: AgentListItemProps) {
         </div>
 
         <div className="flex items-center gap-2">
+          <button
+            onClick={handleRunNow}
+            disabled={isRunning || isUpdating}
+            className="px-3 py-1.5 text-sm font-medium text-white bg-black hover:bg-gray-800 rounded-lg transition-colors disabled:opacity-50"
+          >
+            {isRunning ? (
+              <span className="flex items-center gap-1.5">
+                <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                Running
+              </span>
+            ) : (
+              'Run Now'
+            )}
+          </button>
+
           {(isActive || isPaused) && (
             <button
               onClick={handleStop}
-              disabled={isUpdating}
+              disabled={isUpdating || isRunning}
               className="px-3 py-1.5 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors disabled:opacity-50"
             >
               Stop
@@ -129,7 +153,7 @@ export function AgentListItem({ agent }: AgentListItemProps) {
           {isStopped && (
             <button
               onClick={handleResume}
-              disabled={isUpdating}
+              disabled={isUpdating || isRunning}
               className="px-3 py-1.5 text-sm font-medium text-green-600 bg-green-50 hover:bg-green-100 rounded-lg transition-colors disabled:opacity-50"
             >
               Resume
@@ -138,7 +162,7 @@ export function AgentListItem({ agent }: AgentListItemProps) {
 
           <button
             onClick={handleDeleteClick}
-            disabled={isDeleting}
+            disabled={isDeleting || isRunning}
             className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors disabled:opacity-50 ${
               confirmDelete
                 ? 'text-red-600 bg-red-100 hover:bg-red-200'

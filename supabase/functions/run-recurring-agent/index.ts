@@ -51,21 +51,54 @@ Deno.serve(async (req) => {
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
   try {
-    // Get current day of week in EST timezone
-    const estDate = new Date().toLocaleString('en-US', { timeZone: 'America/New_York' });
-    const currentDayOfWeek = new Date(estDate).getDay(); // 0-6 (Sunday-Saturday)
+    // Check for optional agent_id parameter for manual runs
+    let specificAgentId: string | null = null;
+    if (req.method === 'POST') {
+      try {
+        const body = await req.json();
+        specificAgentId = body.agent_id || null;
+      } catch {
+        // No body or invalid JSON, continue with scheduled run
+      }
+    }
 
-    console.log(`Current day of week in EST: ${currentDayOfWeek}`);
+    let dueAgents: RecurringAgent[];
 
-    // Query agents where status = 'active' AND run_day = today's day number
-    const { data: dueAgents, error: queryError } = await supabase
-      .from('recurring_agents')
-      .select('*')
-      .eq('status', 'active')
-      .eq('run_day', currentDayOfWeek);
+    if (specificAgentId) {
+      // Manual run: fetch specific agent regardless of day
+      console.log(`Manual run requested for agent: ${specificAgentId}`);
 
-    if (queryError) {
-      throw new Error(`Failed to query agents: ${queryError.message}`);
+      const { data: agent, error: agentError } = await supabase
+        .from('recurring_agents')
+        .select('*')
+        .eq('id', specificAgentId)
+        .single();
+
+      if (agentError || !agent) {
+        throw new Error(`Agent not found: ${agentError?.message || 'Unknown error'}`);
+      }
+
+      dueAgents = [agent];
+    } else {
+      // Scheduled run: query by day of week
+      // Get current day of week in EST timezone
+      const estDate = new Date().toLocaleString('en-US', { timeZone: 'America/New_York' });
+      const currentDayOfWeek = new Date(estDate).getDay(); // 0-6 (Sunday-Saturday)
+
+      console.log(`Current day of week in EST: ${currentDayOfWeek}`);
+
+      // Query agents where status = 'active' AND run_day = today's day number
+      const { data: agents, error: queryError } = await supabase
+        .from('recurring_agents')
+        .select('*')
+        .eq('status', 'active')
+        .eq('run_day', currentDayOfWeek);
+
+      if (queryError) {
+        throw new Error(`Failed to query agents: ${queryError.message}`);
+      }
+
+      dueAgents = agents || [];
     }
 
     if (!dueAgents || dueAgents.length === 0) {
